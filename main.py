@@ -10,7 +10,7 @@ def deg_to_rad(deg: float) -> float:
 INITIAL_BALL_SPEED = 85.0
 
 # radians/s
-INITIAL_BACK_SPIN = 2094.0
+INITIAL_BACK_SPIN = 183.26
 INITIAL_RIFLE_SPIN = 0.0
 INIITAL_SIDE_SPIN = 0.0
 
@@ -35,24 +35,51 @@ GRAVITY = 9.8
 
 # coefficients
 # [0, 0.5]
-C_L = 0.2
-C_D = 0.2
+C_L = 0.1
+C_D = 0.1
 # [0, 0.02]
 C_M = 0.01
 
+YARDS_PER_METER = 1.09361
+
 # HELPER FUNCTIONS
+def spin_ratio(v: Vector, w: Vector) -> float:
+    s = GOLF_BALL_RADIUS * w.length() / v.length()
+    print(f'SPIN RATIO: {s}')
+    return s
+
+# 0.1304, 0.9287,-0.8259, 0.0504, 1.2031, -1.1490, 0.01
+A = 0.1304
+B = 0.9287
+C = -0.8259
+D = 0.0504 
+E = 1.2031
+F = -1.1490
+G = 0.01
+def drag_coefficient(v: Vector, w: Vector) -> float: 
+    s = spin_ratio(v, w)
+    return A + B * s + C * (s ** 2)
+
+def lift_coefficicent(v: Vector, w: Vector) -> float:
+    s = spin_ratio(v, w)
+    return D + E * s + F * (s ** 2)
+
+def m_coefficient(v: Vector, w: Vector) -> float:
+    s = spin_ratio(v, w)
+    return G * s
+
 def q_dynamic_air_pressure(v: Vector) -> float:
     return 0.5 * AIR_DENSITY * v.length_squared()
 
 def force_lift(v: Vector, w: Vector) -> Vector:
     v_x_w = v.cross_product(w)
-    return C_L * q_dynamic_air_pressure(v) * AREA * v_x_w / (v_x_w.length())
+    return lift_coefficicent(v, w) * q_dynamic_air_pressure(v) * AREA * v_x_w / (v_x_w.length())
 
-def force_drag(v: Vector) -> Vector:
-    return -C_D * q_dynamic_air_pressure(v) * AREA * (v / v.length())
+def force_drag(v: Vector, w: Vector) -> Vector:
+    return -drag_coefficient(v, w) * q_dynamic_air_pressure(v) * AREA * (v / v.length())
 
 def force_torque(v: Vector, w: Vector) -> Vector:
-    return -C_M * q_dynamic_air_pressure(v) * GOLF_BALL_DIAMETER * AREA * (w / w.length())
+    return -m_coefficient(v, w) * q_dynamic_air_pressure(v) * GOLF_BALL_DIAMETER * AREA * (w / w.length())
 
 def force_gravity(v: Vector) -> Vector:
     k = v / v.length()
@@ -61,7 +88,7 @@ def force_gravity(v: Vector) -> Vector:
 
 def apply_force(v: Vector, w: Vector) -> Vector:
     f_l = force_lift(v, w)
-    f_d = force_drag(v)
+    f_d = force_drag(v, w)
     f_g = force_gravity(v)
     print(f'\t\tApply Force: Lift: {f_l.x:.2f} {f_l.y:.2f} {f_l.z:.2f}')
     print(f'\t\tApply Force: Drag: {f_d.x:.2f} {f_d.y:.2f} {f_d.z:.2f}')
@@ -127,7 +154,7 @@ def simulate():
         print(f'{i + 1}\tEnd Velocity:\t{velocity.x:.2f} {velocity.y:.2f} {velocity.z:.2f}')
         print(f'{i + 1}\tEnd Rotation:\t{rotation.x:.2f} {rotation.y:.2f} {rotation.z:.2f}')
         print(f'{i + 1}\tEnd Position:\t{position.x:.2f} {position.y:.2f} {position.z:.2f}')
-        print(f'{i + 1}\tDistance Travelled: {position.distance_to(initial_position):.2f}')
+        print(f'{i + 1}\tDistance Travelled: {position.distance_to(initial_position) * YARDS_PER_METER:.2f}')
 
         if position.z <= 0:
             break
