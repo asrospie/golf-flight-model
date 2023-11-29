@@ -78,6 +78,5 @@ class Vector:
     def distance_to(self, other):
         return math.sqrt(
             (self.x - other.x) ** 2 +
-            (self.y - other.y) ** 2 +
-            (self.z - other.z) ** 2
+            (self.y - other.y) ** 2
         )

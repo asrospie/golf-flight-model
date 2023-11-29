@@ -45,16 +45,19 @@ def q_dynamic_air_pressure(v: Vector) -> float:
     return 0.5 * AIR_DENSITY * v.length_squared()
 
 def force_lift(v: Vector, w: Vector) -> Vector:
-    return C_L * q_dynamic_air_pressure(v) * AREA * v.cross_product(w) / (v.cross_product(w).length())
+    v_x_w = v.cross_product(w)
+    return C_L * q_dynamic_air_pressure(v) * AREA * v_x_w / (v_x_w.length())
 
 def force_drag(v: Vector) -> Vector:
-    return -C_D * q_dynamic_air_pressure(v) * AREA * v
+    return -C_D * q_dynamic_air_pressure(v) * AREA * (v / v.length())
 
 def force_torque(v: Vector, w: Vector) -> Vector:
-    return -C_M * q_dynamic_air_pressure(v) * GOLF_BALL_DIAMETER * AREA * w
+    return -C_M * q_dynamic_air_pressure(v) * GOLF_BALL_DIAMETER * AREA * (w / w.length())
 
 def force_gravity(v: Vector) -> Vector:
-    return Vector(0, 0, -GOLF_BALL_MASS * GRAVITY * v.z)
+    k = v / v.length()
+    k_hat = k.z
+    return Vector(0, 0, -GOLF_BALL_MASS * GRAVITY * k_hat)
 
 def apply_force(v: Vector, w: Vector) -> Vector:
     f_l = force_lift(v, w)
