@@ -22,13 +22,13 @@ GOLF_BALL_DIAMETER = 2 * GOLF_BALL_RADIUS
 GOLF_BALL_MASS = 0.04593
 
 # radians
-LAUNCH_ANGLE = deg_to_rad(17)
+LAUNCH_ANGLE = deg_to_rad(13.2)
 AZIUMUTH = deg_to_rad(0)
 
 # kg/m^3
 AIR_DENSITY = 1.225
 
-AREA = math.pi * GOLF_BALL_RADIUS ** 2
+AREA = math.pi * (GOLF_BALL_RADIUS ** 2)
 
 # meters/second/second
 GRAVITY = 9.8
@@ -56,11 +56,11 @@ D = 0.0504
 E = 1.2031
 F = -1.1490
 G = 0.01
-def drag_coefficient(v: Vector, w: Vector) -> float: 
+def lift_coefficicent(v: Vector, w: Vector) -> float: 
     s = spin_ratio(v, w)
     return A + B * s + C * (s ** 2)
 
-def lift_coefficicent(v: Vector, w: Vector) -> float:
+def drag_coefficient(v: Vector, w: Vector) -> float:
     s = spin_ratio(v, w)
     return D + E * s + F * (s ** 2)
 
@@ -73,7 +73,9 @@ def q_dynamic_air_pressure(v: Vector) -> float:
 
 def force_lift(v: Vector, w: Vector) -> Vector:
     v_x_w = v.cross_product(w)
-    return lift_coefficicent(v, w) * q_dynamic_air_pressure(v) * AREA * v_x_w / (v_x_w.length())
+    c_l = lift_coefficicent(v, w)
+    q = q_dynamic_air_pressure(v)
+    return c_l * q * AREA * (v_x_w / (v_x_w.length()))
 
 def force_drag(v: Vector, w: Vector) -> Vector:
     return -drag_coefficient(v, w) * q_dynamic_air_pressure(v) * AREA * (v / v.length())
@@ -122,12 +124,6 @@ def step(v: Vector, w: Vector, r: Vector, dt: float):
     d_v += v
     d_w += w
     d_r += r
-    print(f'\t\tStep: DT: Velocity: {d_v.x:.2f} {d_v.y:.2f} {d_v.z:.2f}')
-    print(f'\t\tStep: DT: Rotation: {d_w.x:.2f} {d_w.y:.2f} {d_w.z:.2f}')
-    print(f'\t\tStep: DT: Position: {d_r.x:.2f} {d_r.y:.2f} {d_r.z:.2f}')
-    # new_v: Vector = v + dt * (apply_force(v, w) / GOLF_BALL_MASS)
-    # new_w: Vector = w + dt * (-1 * force_torque(v, w) / mass_moment_of_inertia())
-    # new_r: Vector = r + dt * v
     return d_v, d_w, d_r
 
 def simulate():
