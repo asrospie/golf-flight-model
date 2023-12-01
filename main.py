@@ -7,10 +7,11 @@ def deg_to_rad(deg: float) -> float:
 # constants
 
 # m/s
-INITIAL_BALL_SPEED = 85.0
+INITIAL_BALL_SPEED = 67.0
 
 # radians/s
 INITIAL_BACK_SPIN = 183.26
+# INITIAL_BACK_SPIN = 3.868057
 INITIAL_RIFLE_SPIN = 0.0
 INIITAL_SIDE_SPIN = 0.0
 
@@ -22,7 +23,7 @@ GOLF_BALL_DIAMETER = 2 * GOLF_BALL_RADIUS
 GOLF_BALL_MASS = 0.04593
 
 # radians
-LAUNCH_ANGLE = deg_to_rad(13.2)
+LAUNCH_ANGLE = deg_to_rad(17)
 AZIUMUTH = deg_to_rad(0)
 
 # kg/m^3
@@ -45,7 +46,6 @@ YARDS_PER_METER = 1.09361
 # HELPER FUNCTIONS
 def spin_ratio(v: Vector, w: Vector) -> float:
     s = GOLF_BALL_RADIUS * w.length() / v.length()
-    print(f'SPIN RATIO: {s}')
     return s
 
 # 0.1304, 0.9287,-0.8259, 0.0504, 1.2031, -1.1490, 0.01
@@ -56,23 +56,26 @@ D = 0.0504
 E = 1.2031
 F = -1.1490
 G = 0.01
-def lift_coefficicent(v: Vector, w: Vector) -> float: 
+def drag_coefficient(v: Vector, w: Vector) -> float: 
     s = spin_ratio(v, w)
-    return A + B * s + C * (s ** 2)
+    c_d = A + B * s + C * (s ** 2)
+    return c_d
 
-def drag_coefficient(v: Vector, w: Vector) -> float:
+def lift_coefficicent(v: Vector, w: Vector) -> float:
     s = spin_ratio(v, w)
-    return D + E * s + F * (s ** 2)
+    c_l = D + E * s + F * (s ** 2)
+    return c_l
 
 def m_coefficient(v: Vector, w: Vector) -> float:
     s = spin_ratio(v, w)
-    return G * s
+    c_m = G * s
+    return c_m
 
 def q_dynamic_air_pressure(v: Vector) -> float:
     return 0.5 * AIR_DENSITY * v.length_squared()
 
 def force_lift(v: Vector, w: Vector) -> Vector:
-    v_x_w = v.cross_product(w)
+    v_x_w = w.cross_product(v)
     c_l = lift_coefficicent(v, w)
     q = q_dynamic_air_pressure(v)
     return c_l * q * AREA * (v_x_w / (v_x_w.length()))
@@ -84,9 +87,7 @@ def force_torque(v: Vector, w: Vector) -> Vector:
     return -m_coefficient(v, w) * q_dynamic_air_pressure(v) * GOLF_BALL_DIAMETER * AREA * (w / w.length())
 
 def force_gravity(v: Vector) -> Vector:
-    k = v / v.length()
-    k_hat = k.z
-    return Vector(0, 0, -GOLF_BALL_MASS * GRAVITY * k_hat)
+    return Vector(0, 0, -GOLF_BALL_MASS * GRAVITY)
 
 def apply_force(v: Vector, w: Vector) -> Vector:
     f_l = force_lift(v, w)
@@ -129,7 +130,12 @@ def step(v: Vector, w: Vector, r: Vector, dt: float):
 def simulate():
     initial_position = Vector(0.0, 0.0, 0.0)
     velocity: Vector = initial_velocity() 
-    rotation: Vector = Vector(INITIAL_BACK_SPIN, INITIAL_RIFLE_SPIN, INIITAL_SIDE_SPIN) 
+    # rotation: Vector = Vector(INITIAL_BACK_SPIN, INITIAL_RIFLE_SPIN, INIITAL_SIDE_SPIN) 
+    rotation: Vector = Vector(
+        INITIAL_BACK_SPIN * math.cos(0),
+        0.0,
+        INITIAL_BACK_SPIN * math.sin(0) * -1
+    )
     position: Vector = initial_position 
     delta: float = 0.1
     print(f'Initial Data')
